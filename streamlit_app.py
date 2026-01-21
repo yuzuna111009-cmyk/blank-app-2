@@ -1,13 +1,9 @@
 import streamlit as st
-import openai
-
-# OpenAI APIキー（Streamlit Cloud の Secrets に設定）
-openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 st.title("🌟 アイドル適性診断メーカー")
 st.write("質問に答えて、もしあなたがアイドルだったらどんなタイプか診断します。")
 
-# 質問と点数設定
+# 質問
 q1 = st.radio(
     "① 人前に立つのは好きですか？",
     ("とても好き", "普通", "少し苦手")
@@ -26,51 +22,23 @@ q3 = st.radio(
 # 点数計算
 score = 0
 
-if q1 == "とても好き":
-    score += 3
-elif q1 == "普通":
-    score += 2
-else:
-    score += 1
+score += 3 if q1 == "とても好き" else 2 if q1 == "普通" else 1
+score += 3 if q2 == "得意" else 2 if q2 == "まあまあ" else 1
+score += 3 if q3 == "得意" else 2 if q3 == "普通" else 1
 
-if q2 == "得意":
-    score += 3
-elif q2 == "まあまあ":
-    score += 2
-else:
-    score += 1
-
-if q3 == "得意":
-    score += 3
-elif q3 == "普通":
-    score += 2
-else:
-    score += 1
-
-# 診断ボタン
+# 診断
 if st.button("診断する"):
     if score >= 8:
-        idol_type = "センター型アイドル"
+        idol_type = "🌟 センター型アイドル"
+        comment = "あなたは人を惹きつける華のある存在です。ステージの中心で輝く素質があります。"
     elif score >= 6:
-        idol_type = "パフォーマンス特化型アイドル"
+        idol_type = "💃 パフォーマンス特化型アイドル"
+        comment = "努力を重ねて実力で魅せるタイプです。ライブで真価を発揮します。"
     else:
-        idol_type = "サポート・バラエティ型アイドル"
+        idol_type = "🎤 サポート・バラエティ型アイドル"
+        comment = "周囲を支え、場の雰囲気を明るくする大切な存在です。"
 
-    st.subheader(f"🎤 診断結果：{idol_type}")
-
-    # AIに診断コメント生成を指示
-    prompt = f"""
-    以下のアイドルタイプについて、ポジティブで楽しい診断コメントを日本語で作成してください。
-    タイプ：{idol_type}
-    """
-
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-
-    comment = response["choices"][0]["message"]["content"]
+    st.subheader(f"診断結果：{idol_type}")
     st.write(comment)
+
 
