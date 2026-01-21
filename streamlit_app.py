@@ -1,44 +1,44 @@
 import streamlit as st
 
 st.title("🌟 アイドル適性診断メーカー")
-st.write("質問に答えて、もしあなたがアイドルだったらどんなタイプか診断します。")
+st.write("質問に答えて、あなたのアイドル適性タイプを診断します。")
 
-# 質問
-q1 = st.radio(
-    "① 人前に立つのは好きですか？",
-    ("とても好き", "普通", "少し苦手")
-)
+def question(text):
+    return st.radio(
+        text,
+        ("とても当てはまる", "少し当てはまる", "あまり当てはまらない"),
+        index=1
+    )
 
-q2 = st.radio(
-    "② コツコツ練習するのは得意ですか？",
-    ("得意", "まあまあ", "苦手")
-)
+q1 = question("① 人前に立つのは好きですか？")
+q2 = question("② ダンスや歌の練習は好きですか？")
+q3 = question("③ トークやバラエティは得意ですか？")
+q4 = question("④ 毎日コツコツ努力するのは得意ですか？")
+q5 = question("⑤ チームのまとめ役になることが多いですか？")
+q6 = question("⑥ 失敗してもすぐ切り替えられますか？")
 
-q3 = st.radio(
-    "③ トークやバラエティは得意ですか？",
-    ("得意", "普通", "苦手")
-)
+def score(ans):
+    return 3 if ans == "とても当てはまる" else 2 if ans == "少し当てはまる" else 1
 
-# 点数計算
-score = 0
+total = sum(map(score, [q1, q2, q3, q4, q5, q6]))
 
-score += 3 if q1 == "とても好き" else 2 if q1 == "普通" else 1
-score += 3 if q2 == "得意" else 2 if q2 == "まあまあ" else 1
-score += 3 if q3 == "得意" else 2 if q3 == "普通" else 1
-
-# 診断
 if st.button("診断する"):
-    if score >= 8:
+    if total >= 13:
         idol_type = "🌟 センター型アイドル"
-        comment = "あなたは人を惹きつける華のある存在です。ステージの中心で輝く素質があります。"
-    elif score >= 6:
+        comment = "自然と視線を集める華があり、ステージの中心で輝く存在です。"
+    elif total >= 11:
         idol_type = "💃 パフォーマンス特化型アイドル"
-        comment = "努力を重ねて実力で魅せるタイプです。ライブで真価を発揮します。"
+        comment = "努力と実力で魅せるタイプ。ライブで真価を発揮します。"
+    elif total >= 9:
+        idol_type = "🎤 バラエティ型アイドル"
+        comment = "トークやリアクションで場を盛り上げるムードメーカーです。"
+    elif total >= 7:
+        idol_type = "🧠 努力家プロ型アイドル"
+        comment = "地道な努力を積み重ね、着実に成長していくタイプです。"
     else:
-        idol_type = "🎤 サポート・バラエティ型アイドル"
-        comment = "周囲を支え、場の雰囲気を明るくする大切な存在です。"
+        idol_type = "🤝 サポート型アイドル"
+        comment = "周囲をよく見て支える、グループに欠かせない存在です。"
 
     st.subheader(f"診断結果：{idol_type}")
     st.write(comment)
-
-
+    st.caption(f"合計点：{total} 点")
