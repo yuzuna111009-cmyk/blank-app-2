@@ -1,3 +1,19 @@
+from supabase import create_client
+
+supabase = create_client(
+    st.secrets["SUPABASE_URL"],
+    st.secrets["SUPABASE_KEY"]
+)
+if st.button("構成案を作成する") and theme:
+    # --- Supabase に利用データを保存 ---
+    supabase.table("report_usage").insert({
+        "theme": theme,
+        "report_type": report_type
+    }).execute()
+
+    st.subheader("📄 レポート構成案（文字数目安つき）")
+    ...
+
 import streamlit as st
 
 st.set_page_config(page_title="レポート構成アドバイザー", page_icon="📝")
