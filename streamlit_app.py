@@ -1,123 +1,114 @@
 import streamlit as st
 from supabase import create_client, Client
+from datetime import datetime
 
-supabase = create_client(
-    st.secrets["SUPABASE_URL"],
-    st.secrets["SUPABASE_KEY"]
-)
-if st.button("構成案を作成する") and theme:
-    # --- Supabase に利用データを保存 ---
-    supabase.table("report_usage").insert({
-        "theme": theme,
-        "report_type": report_type
-    }).execute()
-
-    st.subheader("📄 レポート構成案（文字数目安つき）")
-    ...
-
-import streamlit as st
-
+# -----------------------------
+# 初期設定
+# -----------------------------
 st.set_page_config(page_title="レポート構成アドバイザー", page_icon="📝")
 
-st.title("📝 レポート構成アドバイザー")
-st.write("レポートのテーマと種類を選ぶと、構成案・テンプレート・注意点を提示します。")
+# Supabase 接続
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
+supabase: Client = create_client(url, key)
 
-# --- 入力 ---
-theme = st.text_input("レポートのテーマを入力してください")
+# -----------------------------
+# UI
+# -----------------------------
+st.title("📝 レポート構成アドバイザー")
+st.write("レポートのテーマを入力すると、構成案・注意点・チェック項目を提示します。")
+
+theme = st.text_input("レポートのテーマを入力してください", key="theme_input")
 
 report_type = st.selectbox(
-    "レポートの種類を選んでください",
-    ["調査レポート", "考察レポート", "実験・実習レポート"]
+    "レポートの種類を選択してください",
+    ["講義レポート", "調査レポート", "実験レポート", "自由課題レポート"],
+    key="report_type"
 )
 
-if st.button("構成案を作成する") and theme:
-    st.subheader("📄 レポート構成案（文字数目安つき）")
+# -----------------------------
+# ボタン処理
+# -----------------------------
+if st.button("構成案を作成する", key="create_outline") and theme:
 
-    st.markdown("### ① はじめに（200〜300字）")
+    # Supabase に保存
+    supabase.table("report_logs").insert({
+        "theme": theme,
+        "report_type": report_type,
+        "created_at": datetime.now().isoformat()
+    }).execute()
+
+    # -----------------------------
+    # 出力
+    # -----------------------------
+    st.subheader("📄 レポート構成案")
+
+    st.markdown("### ① はじめに（導入）")
     st.write(f"- テーマ「{theme}」を選んだ理由を書く")
-    st.write("- 本レポートの目的を明確に示す")
-    st.write("❌ NG例：「とても興味を持ったから選んだ」")
+    st.write("- レポートの目的・問題意識を明確にする")
+    st.write("【文字数目安】全体の10〜15%")
 
-    st.markdown("### ② 背景・基礎知識（400〜600字）")
-    st.write("- 用語や理論を説明する")
-    st.write("- 参考文献を用いて説明する")
-    st.write("❌ NG例：出典のない説明、Wikipediaだけを参考にする")
+    st.markdown("### ② 背景・基礎知識")
+    st.write("- 基本用語や理論を整理する")
+    st.write("- 信頼できる資料を引用する")
+    st.write("【文字数目安】20〜25%")
 
-    if report_type == "調査レポート":
-        st.markdown("### ③ 調査内容・分析（800〜1200字）")
-        st.write("- 調査方法と結果を客観的に示す")
-        st.write("❌ NG例：結果と感想を混ぜて書く")
+    st.markdown("### ③ 本論・分析")
+    st.write("- データ・具体例を用いて論じる")
+    st.write("- 図表があれば効果的")
+    st.write("【文字数目安】40〜50%")
 
-    elif report_type == "考察レポート":
-        st.markdown("### ③ 本論・考察（800〜1200字）")
-        st.write("- 主張と根拠をセットで書く")
-        st.write("❌ NG例：「〜だと思う」だけで根拠がない")
+    st.markdown("### ④ 考察")
+    st.write("- 分析結果から分かることを整理")
+    st.write("- 自分の意見を論理的に述べる")
+    st.write("【文字数目安】15〜20%")
 
-    else:
-        st.markdown("### ③ 実験・実習内容（600〜1000字）")
-        st.write("- 目的・方法・結果を分けて書く")
-        st.write("❌ NG例：手順が曖昧、結果が文章だけ")
+    st.markdown("### ⑤ まとめ")
+    st.write("- 全体の要点を簡潔に振り返る")
+    st.write("- 今後の課題を示す")
 
-    st.markdown("### ④ まとめ・結論（200〜300字）")
-    st.write("- 全体を簡潔に振り返る")
-    st.write("❌ NG例：新しい内容を書く")
+    # -----------------------------
+    # NG例
+    # -----------------------------
+    st.subheader("❌ よくあるミス（NG例）")
+    st.write("- 感想だけで終わっている")
+    st.write("- 根拠や資料が示されていない")
+    st.write("- 話題が途中で変わる")
 
-    st.divider()
+    st.subheader("🚫 具体的NG表現例")
+    st.write("×「なんとなく重要だと思った」")
+    st.write("×「すごいと感じた」")
+    st.write("→ 理由・根拠を必ず書く")
 
-    # =========================
-    # 🥇 構成テンプレ（コピー用）
-    # =========================
-    st.subheader("📋 コピペ用レポートテンプレート")
+    # -----------------------------
+    # コピー用テンプレ
+    # -----------------------------
+    st.subheader("📋 構成テンプレ（コピー用）")
+    template = f"""
+① はじめに
+・テーマ：{theme}
+・目的：
 
-    template = f"""【はじめに】
-（テーマ：{theme}）
-（目的を書く）
+② 背景・基礎知識
 
-【背景・基礎知識】
-（用語・理論・先行研究）
+③ 本論・分析
 
-【本論】
-（分析・考察を書く）
+④ 考察
 
-【まとめ】
-（結論・今後の課題）
+⑤ まとめ
 """
+    st.code(template)
 
-    st.text_area(
-        "以下をコピーして Word や Google Docs に貼り付けてください",
-        template,
-        height=220
-    )
-
-    st.divider()
-
-    # =========================
-    # 🥈 提出前チェックリスト
-    # =========================
+    # -----------------------------
+    # チェックリスト
+    # -----------------------------
     st.subheader("✅ 提出前チェックリスト")
+    st.checkbox("テーマと内容が一致している")
+    st.checkbox("根拠・資料が示されている")
+    st.checkbox("自分の考察が書かれている")
+    st.checkbox("誤字脱字を確認した")
 
-    st.checkbox("テーマと目的が導入に書かれている")
-    st.checkbox("主張と根拠が対応している")
-    st.checkbox("文字数条件を満たしている")
-    st.checkbox("参考文献・出典を明記している")
-    st.checkbox("誤字・脱字を確認した")
-
-    st.divider()
-
-    # =========================
-    # 🥉 具体的NG表現例
-    # =========================
-    st.subheader("⚠ よくあるNG表現と言い換え例")
-
-    st.markdown("""
-❌ **とても重要だと思った**  
-✅ **〇〇の点から重要である**
-
-❌ **すごく影響がある**  
-✅ **△△に対して大きな影響を与えている**
-
-❌ **なんとなくそう感じた**  
-✅ **データや事例からそのように考えられる**
-""")
-
-    st.info("※ この構成は一例です。授業の指示に応じて調整してください。")
+# -----------------------------
+# フッター
+# -----------------------------
+st.caption("© Report Structure Advisor with Supabase")
