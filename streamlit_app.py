@@ -32,7 +32,7 @@ report_type = st.selectbox(
 if st.button("構成案を作成する", key="create_outline") and theme:
 
     # Supabase に保存
-    supabase.table("report_logs").insert({
+    supabase.table("report_usage").insert({
         "theme": theme,
         "report_type": report_type,
         "created_at": datetime.now().isoformat()
