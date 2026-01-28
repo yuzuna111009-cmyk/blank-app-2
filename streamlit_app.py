@@ -58,4 +58,9 @@ if st.button("構成案を作成する", key="create_outline") and theme:
     st.write("- 分析結果から分かることを整理")
     st.write("- 自分の意見を論理的に述べる")
 
-    st.markdown(...)
+    st.markdown("""
+### ① はじめに（導入）
+- テーマを選んだ理由を書く  
+- レポートの目的・問題意識を明確にする
+""")
+
