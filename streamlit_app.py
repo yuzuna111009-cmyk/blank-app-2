@@ -58,4 +58,4 @@ if st.button("構成案を作成する", key="create_outline") and theme:
     st.write("- 分析結果から分かることを整理")
     st.write("- 自分の意見を論理的に述べる")
 
-    st.m
+    st.markdown(...)
