@@ -1,4 +1,4 @@
-from supabase import create_client
+from supabase import create_client, Client
 
 supabase = create_client(
     st.secrets["SUPABASE_URL"],
