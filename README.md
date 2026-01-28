@@ -1,19 +1,94 @@
-# 🎈 Blank app template
+# 📝 レポート構成アドバイザー
 
-A simple Streamlit app template for you to modify!
+Streamlit を利用した、レポート作成を支援するための Web アプリケーションです。  
+レポートのテーマを入力すると、**基本的な構成案・注意点・チェック項目**を自動で提示し、  
+「何から書けばよいか分からない」という課題を解決することを目的としています。
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+---
 
-### How to run it on your own machine
+## URL
 
-1. Install the requirements
+以下のURLからアプリを試すことができます  
+（スリープ状態のときは青色の起動ボタンを押してください）：
 
-   ```
-   $ pip install -r requirements.txt
-   ```
+👉 https://blank-app-34imvmz336l.streamlit.app/
 
-2. Run the app
+---
 
-   ```
-   $ streamlit run streamlit_app.py
-   ```
+## 🌟 主な機能
+
+* **レポート構成案の自動生成**
+  - 導入・背景・本論・考察・まとめの基本構造を提示
+* **レポート種類の選択**
+  - 講義レポート / 調査レポート / 実験レポート / 自由課題レポート に対応
+* **文字数配分の目安表示**
+  - 各章ごとの適切な分量を可視化
+* **よくあるミス（NG例）の提示**
+  - 初学者が陥りやすい失敗を事前に確認可能
+* **具体的なNG表現例の表示**
+  - 曖昧な表現・感想文にならないための注意喚起
+* **構成テンプレートのコピー機能**
+  - そのままレポート作成に使える形式を表示
+* **提出前チェックリスト**
+  - 内容漏れや確認不足を防止
+* **利用履歴の保存**
+  - Supabase を用いてテーマとレポート種類を永続的に保存
+
+---
+
+## 🧠 AIへの指示内容
+
+生成AIには、以下の点を意識して指示しました。
+
+* 特定の授業や分野に偏らない、汎用的なレポート構成を考えること
+* 導入・本論・考察・まとめといった基本構造を分かりやすく提示すること
+* 初学者でも理解しやすい、シンプルな表現を用いること
+
+その結果、**どの授業でも使えるレポート支援アプリ**を目指しました。
+
+---
+
+## 😓 開発で大変だった点
+
+* **Supabase との接続設定**
+  - `requirements.txt` の設定や `st.secrets` の登録でエラーが発生
+* **Streamlit 特有のエラー対応**
+  - `DuplicateElementId` エラーや表示の重複問題
+* **データの永続化**
+  - sqlite3 ではなく、アプリ停止後もデータが残る Supabase を利用する構成に変更
+
+これらはエラーメッセージの確認や Qiita 記事を参考にしながら解決しました。
+
+---
+
+## 📊 データの仕組み
+
+このアプリでは **Supabase（PostgreSQL）** を利用して利用履歴を管理しています。
+
+* **report_usage**
+  - レポートテーマ
+  - レポート種類
+  - 利用日時
+
+RLS（Row Level Security）はオフに設定しています。
+
+---
+
+## 💻 使用技術
+
+* **Frontend/UI**: Streamlit  
+* **Backend/DB**: Supabase（PostgreSQL）  
+* **Language**: Python  
+* **Hosting**: Streamlit Cloud  
+
+---
+
+## 💡 今後の拡張案
+
+* Markdown 形式での構成案出力
+* レポート種類ごとの構成カスタマイズ
+* 過去の利用履歴を元にした改善提案機能
+
+---
+
+© Report Structure Advisor
