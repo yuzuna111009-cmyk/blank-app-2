@@ -6,7 +6,7 @@ import random
 # =========================
 # 初期設定
 # =========================
-st.set_page_config(page_title="📚 Report評価 RPG", page_icon="🧙")
+st.set_page_config(page_title="📚 Report　評価 RPG", page_icon="🧙")
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
