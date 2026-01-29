@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
+import requests
 from supabase import create_client, Client
-from openai import OpenAI
 
 # -----------------------------
 # 初期設定
@@ -13,14 +13,24 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
-# OpenAI 接続
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# -----------------------------
+# Wikipedia API関数
+# -----------------------------
+def get_wikipedia_summary(keyword):
+    url = "https://ja.wikipedia.org/api/rest_v1/page/summary/" + keyword
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("extract", "概要が見つかりませんでした。")
+    else:
+        return "Wikipediaに該当ページがありません。"
 
 # -----------------------------
 # UI
 # -----------------------------
-st.title("📝 レポート構成アドバイザー")
-st.write("テーマを入力するとAIが構成案を生成します。")
+st.title("📝 レポート構成アドバイザー（Wikipedia連携版）")
+st.write("テーマを入力すると、Wikipediaの情報をもとに構成案を生成します。")
 
 theme = st.text_input("レポートのテーマを入力してください")
 
@@ -34,36 +44,35 @@ report_type = st.selectbox(
 # -----------------------------
 if st.button("構成案を作成する") and theme:
 
-    with st.spinner("AIが構成案を生成中..."):
+    with st.spinner("Wikipediaから情報取得中..."):
 
-        prompt = f"""
-        テーマ「{theme}」の{report_type}の構成案を作成してください。
+        summary = get_wikipedia_summary(theme)
 
-        以下の形式で出力してください：
+    st.subheader("📚 Wikipedia概要")
+    st.write(summary)
 
-        ① はじめに
-        ② 背景・基礎知識
-        ③ 本論・分析
-        ④ 考察
-        ⑤ まとめ
+    st.subheader("📄 レポート構成案")
 
-        各項目に簡単な説明もつけてください。
-        """
+    st.markdown("### ① はじめに")
+    st.write(f"- テーマ「{theme}」の概要と重要性を説明する")
+    st.write("- 本レポートの目的を示す")
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "あなたは大学レポート指導の専門家です。"},
-                {"role": "user", "content": prompt}
-            ],
-        )
+    st.markdown("### ② 背景・基礎知識")
+    st.write("- Wikipediaの内容を整理する")
+    st.write("- 基本用語や歴史をまとめる")
 
-        ai_outline = response.choices[0].message.content
+    st.markdown("### ③ 本論・分析")
+    st.write("- Wikipedia情報をもとに詳しく分析")
+    st.write("- 他資料と比較する")
 
-    st.subheader("📄 AI生成構成案")
-    st.write(ai_outline)
+    st.markdown("### ④ 考察")
+    st.write("- 課題点や問題点を整理")
+    st.write("- 自分の意見を述べる")
 
-    # Supabaseに保存
+    st.markdown("### ⑤ まとめ")
+    st.write("- 全体の要点を整理")
+
+    # Supabase保存
     supabase.table("report_usage").insert({
         "theme": theme,
         "report_type": report_type
@@ -87,11 +96,9 @@ if data.data:
 
     st.write(f"🟢 これまでの利用回数：**{len(df)} 回**")
 
-    # レポート種類別グラフ
     st.subheader("📊 レポート種類別利用回数")
     st.bar_chart(df["report_type"].value_counts())
 
-    # 人気テーマランキング
     st.subheader("🏆 人気テーマランキング")
     theme_ranking = df["theme"].value_counts().reset_index()
     theme_ranking.columns = ["テーマ", "回数"]
@@ -103,4 +110,4 @@ else:
 # -----------------------------
 # フッター
 # -----------------------------
-st.caption("© Report Structure Advisor / AI + Supabase 対応版")
+st.caption("© Report Structure Advisor / Wikipedia API + Supabase 対応版")
