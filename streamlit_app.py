@@ -1,67 +1,61 @@
 import streamlit as st
 from supabase import create_client
-from openai import OpenAI
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests
 from datetime import datetime
 
 # -----------------------------
-# API設定
+# Supabase設定
 # -----------------------------
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
 st.title("🗡️ Report RPG - レポート勇者育成ゲーム")
+st.write("Wikipediaの知識を使ってレポート勇者を育てよう！")
 
 # -----------------------------
-# 入力フォーム
+# Wikipedia API
 # -----------------------------
-name = st.text_input("勇者の名前を入力せよ")
+def get_wiki_summary(theme):
+    url = f"https://ja.wikipedia.org/api/rest_v1/page/summary/{theme}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("extract", "情報が見つかりませんでした。")
+    else:
+        return None
+
+# -----------------------------
+# 入力
+# -----------------------------
+name = st.text_input("勇者の名前")
 theme = st.text_input("レポートテーマ")
-report_type = st.selectbox(
-    "レポートの種類",
-    ["講義レポート", "調査レポート", "実験レポート", "自由課題レポート"]
-)
 
-generate = st.button("⚔️ レポートに挑戦する")
+generate = st.button("⚔️ クエスト開始")
 
 # -----------------------------
-# AI生成
+# クエスト処理
 # -----------------------------
-if generate and theme != "" and name != "":
+if generate and name and theme:
 
-    with st.spinner("魔王（AI）が構成を生成中..."):
+    summary = get_wiki_summary(theme)
 
-        prompt = f"""
-        レポートテーマ: {theme}
-        種類: {report_type}
+    if summary:
+        st.success("クエスト成功！Wikipedia情報を取得！")
 
-        RPG風にレポート構成を作ってください。
-        章ごとにレベル形式で。
-        """
+        st.subheader("📚 Wikipedia情報")
+        st.write(summary)
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-        )
+        # スコア計算（文字数で決定）
+        score = len(summary)
 
-        result = response.choices[0].message.content
-
-        st.success("クエスト成功！")
-        st.write(result)
-
-        # -----------------------------
-        # スコア計算（簡易）
-        # -----------------------------
-        score = len(theme) * 10
-
-        if score > 200:
-            title = "レポート賢者"
-        elif score > 120:
+        if score > 800:
+            title = "伝説のレポート賢者"
+        elif score > 400:
             title = "上級勇者"
         else:
             title = "見習い勇者"
@@ -70,9 +64,7 @@ if generate and theme != "" and name != "":
         st.write(title)
         st.write(f"スコア: {score}")
 
-        # -----------------------------
         # Supabase保存
-        # -----------------------------
         supabase.table("report_rpg_scores").insert({
             "name": name,
             "score": score,
@@ -80,9 +72,13 @@ if generate and theme != "" and name != "":
             "created_at": datetime.now().isoformat()
         }).execute()
 
+    else:
+        st.error("Wikipediaに情報が見つかりませんでした。")
+
 # -----------------------------
 # ランキング表示
 # -----------------------------
+st.divider()
 st.subheader("🏅 勇者ランキング")
 
 data = supabase.table("report_rpg_scores").select("*").execute()
@@ -93,9 +89,6 @@ if data.data:
 
     st.dataframe(df_sorted[["name", "score", "title"]])
 
-    # -----------------------------
-    # スコアグラフ
-    # -----------------------------
     st.subheader("📊 スコア分布")
 
     plt.figure()
