@@ -4,7 +4,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import requests
 from datetime import datetime
-import urllib.parse
 
 # -----------------------------
 # ページ設定
@@ -21,12 +20,17 @@ SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # -----------------------------
-# Wikipedia検索＋本文取得（超安定版）
+# Wikipedia取得（User-Agent付き）
 # -----------------------------
 def get_wiki_summary(theme):
     try:
-        # ① 検索API
-        search_url = "https://ja.wikipedia.org/w/api.php"
+        url = "https://ja.wikipedia.org/w/api.php"
+
+        headers = {
+            "User-Agent": "ReportRPGApp/1.0 (educational project)"
+        }
+
+        # ① 検索
         search_params = {
             "action": "query",
             "list": "search",
@@ -34,7 +38,7 @@ def get_wiki_summary(theme):
             "format": "json"
         }
 
-        search_response = requests.get(search_url, params=search_params, timeout=5)
+        search_response = requests.get(url, params=search_params, headers=headers, timeout=5)
         search_data = search_response.json()
 
         if not search_data.get("query", {}).get("search"):
@@ -42,7 +46,7 @@ def get_wiki_summary(theme):
 
         page_title = search_data["query"]["search"][0]["title"]
 
-        # ② 本文取得API（extractsを使用 ← これが安定）
+        # ② 本文取得
         extract_params = {
             "action": "query",
             "prop": "extracts",
@@ -52,15 +56,17 @@ def get_wiki_summary(theme):
             "format": "json"
         }
 
-        extract_response = requests.get(search_url, params=extract_params, timeout=5)
+        extract_response = requests.get(url, params=extract_params, headers=headers, timeout=5)
         extract_data = extract_response.json()
 
-        pages = extract_data["query"]["pages"]
-        page = next(iter(pages.values()))
+        pages = extract_data.get("query", {}).get("pages", {})
+        if not pages:
+            return None
 
+        page = next(iter(pages.values()))
         return page.get("extract")
 
-    except Exception:
+    except Exception as e:
         return None
 
 # -----------------------------
@@ -103,7 +109,6 @@ if generate:
             st.write(title)
             st.write(f"スコア: {score}")
 
-            # 保存
             supabase.table("report_rpg_scores").insert({
                 "name": name,
                 "score": score,
@@ -112,7 +117,7 @@ if generate:
             }).execute()
 
         else:
-            st.error("十分なWikipedia情報が見つかりませんでした。")
+            st.error("Wikipedia情報の取得に失敗しました。別のテーマを試してください。")
 
 # -----------------------------
 # ランキング
