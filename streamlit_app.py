@@ -13,7 +13,7 @@ SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.title("🧙 レポートRPG")
+st.title("🧙 レポート評価RPG")
 st.write("レポート全文を入力するとAIが評価し、スコアと称号を与えます。")
 
 # =========================
