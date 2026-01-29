@@ -84,4 +84,54 @@ if generate:
             if score > 1500:
                 title = "👑 伝説のレポート賢者"
             elif score > 800:
-                title = "🧙
+                title = "🧙 上級勇者"
+            elif score > 300:
+                title = "⚔️ 一人前の勇者"
+            else:
+                title = "🪵 見習い勇者"
+
+            st.subheader("🏆 あなたの称号")
+            st.write(title)
+            st.write(f"スコア: {score}")
+
+            # Supabase保存
+            supabase.table("report_rpg_scores").insert({
+                "name": name,
+                "score": score,
+                "title": title,
+                "created_at": datetime.now().isoformat()
+            }).execute()
+
+        else:
+            st.error("Wikipediaに十分な情報が見つかりませんでした。別のテーマで挑戦してください。")
+
+# -----------------------------
+# ランキング表示
+# -----------------------------
+st.divider()
+st.subheader("🏅 勇者ランキング")
+
+data = supabase.table("report_rpg_scores").select("*").execute()
+
+if data.data:
+
+    df = pd.DataFrame(data.data)
+    df_sorted = df.sort_values(by="score", ascending=False)
+
+    st.dataframe(df_sorted[["name", "score", "title"]])
+
+    # グラフ
+    st.subheader("📊 スコア分布")
+
+    plt.figure()
+    plt.hist(df_sorted["score"])
+    st.pyplot(plt)
+
+    # テーマ人気ランキング
+    st.subheader("🔥 人気テーマランキング")
+
+    theme_counts = df["title"].value_counts()
+    st.dataframe(theme_counts)
+
+else:
+    st.write("まだ勇者はいない...")
