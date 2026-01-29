@@ -1,5 +1,5 @@
 streamlit
 supabase
-requests
+openai
 pandas
-
+matplotlib
