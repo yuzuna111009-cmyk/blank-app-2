@@ -9,7 +9,7 @@ import re
 # ページ設定
 # -----------------------------
 st.set_page_config(page_title="Report RPG Pro", page_icon="📚")
-st.title("📚 Report RPG – 本文評価エディション")
+st.title("📚 Report RPG ")
 st.write("あなたのレポートを本気で評価します。")
 
 # -----------------------------
