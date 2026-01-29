@@ -1,5 +1,7 @@
 import streamlit as st
+import pandas as pd
 from supabase import create_client, Client
+from openai import OpenAI
 
 # -----------------------------
 # 初期設定
@@ -11,26 +13,57 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
+# OpenAI 接続
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 # -----------------------------
 # UI
 # -----------------------------
 st.title("📝 レポート構成アドバイザー")
-st.write("レポートのテーマを入力すると、構成案・注意点・チェック項目を提示します。")
+st.write("テーマを入力するとAIが構成案を生成します。")
 
-theme = st.text_input("レポートのテーマを入力してください", key="theme_input")
+theme = st.text_input("レポートのテーマを入力してください")
 
 report_type = st.selectbox(
     "レポートの種類を選択してください",
-    ["講義レポート", "調査レポート", "実験レポート", "自由課題レポート"],
-    key="report_type"
+    ["講義レポート", "調査レポート", "実験レポート", "自由課題レポート"]
 )
 
 # -----------------------------
-# 構成案作成
+# 構成案生成
 # -----------------------------
-if st.button("構成案を作成する", key="create_outline") and theme:
+if st.button("構成案を作成する") and theme:
 
-    # Supabase に保存
+    with st.spinner("AIが構成案を生成中..."):
+
+        prompt = f"""
+        テーマ「{theme}」の{report_type}の構成案を作成してください。
+
+        以下の形式で出力してください：
+
+        ① はじめに
+        ② 背景・基礎知識
+        ③ 本論・分析
+        ④ 考察
+        ⑤ まとめ
+
+        各項目に簡単な説明もつけてください。
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "あなたは大学レポート指導の専門家です。"},
+                {"role": "user", "content": prompt}
+            ],
+        )
+
+        ai_outline = response.choices[0].message.content
+
+    st.subheader("📄 AI生成構成案")
+    st.write(ai_outline)
+
+    # Supabaseに保存
     supabase.table("report_usage").insert({
         "theme": theme,
         "report_type": report_type
@@ -38,59 +71,8 @@ if st.button("構成案を作成する", key="create_outline") and theme:
 
     st.success("利用履歴を保存しました ✅")
 
-    st.subheader("📄 レポート構成案")
-
-    st.markdown("### ① はじめに（導入）")
-    st.write(f"- テーマ「{theme}」を選んだ理由を書く")
-    st.write("- レポートの目的・問題意識を明確にする")
-    st.write("【文字数目安】10〜15%")
-
-    st.markdown("### ② 背景・基礎知識")
-    st.write("- 基本用語や理論を整理する")
-    st.write("- 信頼できる資料を引用する")
-    st.write("【文字数目安】20〜25%")
-
-    st.markdown("### ③ 本論・分析")
-    st.write("- データや具体例を用いて論じる")
-    st.write("【文字数目安】40〜50%")
-
-    st.markdown("### ④ 考察")
-    st.write("- 分析結果から分かることを整理")
-    st.write("- 自分の意見を論理的に述べる")
-
-    st.markdown("### ⑤ まとめ")
-    st.write("- 全体の要点を簡潔に振り返る")
-
-    st.subheader("❌ よくあるミス（NG例）")
-    st.write("- 感想だけで終わる")
-    st.write("- 根拠が示されていない")
-
-    st.subheader("🚫 具体的NG表現例")
-    st.write("×「なんとなく重要だと思った」")
-    st.write("×「すごいと感じた」")
-
-    st.subheader("📋 構成テンプレ（コピー用）")
-    st.code(f"""
-① はじめに
-・テーマ：{theme}
-
-② 背景・基礎知識
-
-③ 本論・分析
-
-④ 考察
-
-⑤ まとめ
-""")
-
-    st.subheader("✅ 提出前チェックリスト")
-    st.checkbox("テーマと内容が一致している")
-    st.checkbox("根拠・資料が示されている")
-    st.checkbox("自分の考察が書かれている")
-    st.checkbox("誤字脱字を確認した")
-
 # -----------------------------
-# 利用状況表示（ここが評価高い）
+# 利用状況表示
 # -----------------------------
 st.divider()
 st.subheader("📊 アプリの利用状況")
@@ -101,12 +83,24 @@ data = supabase.table("report_usage") \
     .execute()
 
 if data.data:
-    st.write(f"🟢 これまでの利用回数：**{len(data.data)} 回**")
-    st.dataframe(data.data)
+    df = pd.DataFrame(data.data)
+
+    st.write(f"🟢 これまでの利用回数：**{len(df)} 回**")
+
+    # レポート種類別グラフ
+    st.subheader("📊 レポート種類別利用回数")
+    st.bar_chart(df["report_type"].value_counts())
+
+    # 人気テーマランキング
+    st.subheader("🏆 人気テーマランキング")
+    theme_ranking = df["theme"].value_counts().reset_index()
+    theme_ranking.columns = ["テーマ", "回数"]
+    st.dataframe(theme_ranking.head(5))
+
 else:
     st.write("まだ利用履歴がありません。")
 
 # -----------------------------
 # フッター
 # -----------------------------
-st.caption("© Report Structure Advisor / Supabase 永続化対応")
+st.caption("© Report Structure Advisor / AI + Supabase 対応版")
