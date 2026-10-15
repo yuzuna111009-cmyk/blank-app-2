@@ -169,4 +169,4 @@ if ranking:
         )
 
 else:
-    st.write("今日はまだ挑戦者がいません。")
+    st.write("今日はまだ挑戦者がいません")
