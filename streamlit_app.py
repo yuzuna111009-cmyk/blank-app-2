@@ -118,7 +118,7 @@ def get_today_ranking():
             SELECT name, score, title
             FROM report_rpg_scores
             WHERE substr(created_at, 1, 10) = ?
-            ORDER BY score DESC, created_at ASC
+            ORDER BY score ASC, created_at ASC
             LIMIT 10
         """, (today,))
 
@@ -154,7 +154,7 @@ if st.button("⚔ 評価する"):
 # =========================
 st.divider()
 
-st.subheader("🏆 今日のランキング")
+st.subheader("🏆 今日のランキング(低い順）")
 
 ranking = get_today_ranking()
 
